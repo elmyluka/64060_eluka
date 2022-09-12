@@ -1,0 +1,68 @@
+---
+title: "Fundamentals_of_Machine_learning. Assignment1"
+author: "Elmy Luka"
+date: "2022-09-12"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+#importing the dataset into R
+elmy_dataset <- read.csv("~/Desktop/Breast_Cancer.csv") 
+
+#descriptive statistics for quantitative variables 
+head(elmy_dataset) 
+tail(elmy_dataset)
+nrow(elmy_dataset)
+ncol(elmy_dataset)
+
+#descriptive statistics for categorical variables.
+str(elmy_dataset)
+summary(elmy_dataset)
+
+#transforming one variable (tumor size)
+elmy_dataset$Tumor.Size <- (elmy_dataset$Tumor.Size/mean(elmy_dataset$Tumor.Size)/sd(elmy_dataset$Tumor.Size))
+elmy_dataset$Tumor.Size
+
+#plotting (histogram) for one quantitative variable (age)
+hist(elmy_dataset$Age)
+
+# Creating a scatterplot
+library("esquisse")
+
+library(ggplot2)
+ggplot(elmy_dataset) +
+  aes(x = Tumor.Size, y = Survival.Months) +
+  geom_point(shape = "circle", size = 1.5, colour = "#B222B1") +
+  theme_minimal()
+  
+  
+  
+
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
