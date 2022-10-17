@@ -1,0 +1,90 @@
+---
+title: "Fundamentals Of Machine Learning - Assignment-3"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+
+
+```{r}
+data_1 <- read.csv("~/Desktop/MS BA/Fundamentals Of Machine Learning/Assignment - 3/UniversalBank.csv")
+
+#Converting to factor variable
+
+data_1$Personal.Loan <- as.factor(data_1$Personal.Loan)
+data_1$Online <- as.factor(data_1$Online)
+data_1$CreditCard <- as.factor(data_1$CreditCard)
+
+#Checking if there is any null variables
+head(is.na(data_1))
+
+library(ggplot2)
+library(caret)
+library(reshape2)
+library(ISLR)
+library(class)
+
+
+#Partition of data to 60:40
+set.seed(250)
+data_1_part <-createDataPartition (data_1$Personal.Loan, p = 0.6, list = F)
+train_1 <-data_1[data_1_part,]
+validate_1 <- data_1[-data_1_part,]
+
+
+#Normalization of Data
+normal_1<-preProcess(train_1[,-c(10,13:14)],method=c("center","scale"))
+train.norm <-predict(normal_1,train_1)
+validate.norm <-predict(normal_1,validate_1)
+
+#A. Creating a pivot table for the training data with Online as a column variable, CC as a row variable and Loan as a secondary row variable.
+table_1 <- ftable(train.norm[,c(14,10,13)])
+table_1
+ 
+#B. From the pivot table it can be analysed that the probability that this customer will accept the loan offer is 44/44+479 = 0.0841.
+
+#C. Creating two separate pivot tables for the training data. One having Personal Loan (rows) as a function of Online (columns) and the other will have Personal Loan (rows) as a function of Credit Card.
+library(melt)
+
+melt_1 <- melt(train.norm,id=c("Personal.Loan"),variable="Online")
+melt_2 <- melt(train.norm,id=c("Personal.Loan"), variable="CreditCard")
+
+cast_1 <- dcast(melt_1, Personal.Loan~Online)
+cast_2 <- dcast(melt_2, Personal.Loan~CreditCard)
+
+#D. Computing the following quantities [P(A | B) means “the probability of A given B
+
+ftable(train.norm[,c(10,13)])
+ftable(train.norm[,c(10,14)])
+ftable(train.norm[,10])
+#1. P(CC = 1 | Loan = 1) = (80/80+208) = 0.277
+#2. P(Online = 1 | Loan = 1)  = (174/174+114) = 0.604
+#3. P(Loan = 1) = (288/288+2712) = 0.096
+#4. P(CC = 1 | Loan = 0) = (800/800+1912) = 0.294
+#5. P(Online = 1 | Loan = 0) = (1624/ 1624+1088) = 0.598
+#6. P(Loan = 0) = (2712/ 2712+288) = 0.904
+
+
+#E. Using the quantities computed above to compute the naive Bayes probability P(Loan = 1 | CC = 1, Online = 1).
+#(0.277 x 0.604 x 0.096) / (0.277 x 0.604 x 0.096) + (0.294 x 0.598 x 0.904) = 0.10
+
+#F. On comparing the naive bayes probability value i.e. 0.10 with the one obtained from the pivot table in (B) i.e.0.0841 it can be noticed that both the values lie near to each other and also the naive bayes has a higher accurate estimate when compared to "B".
+
+#G. Running Naive Bayes on the data
+library(naivebayes)
+
+n_bayes <- naive_bayes(Personal.Loan~Online+CreditCard,data=train.norm)
+n_bayes
+
+#The value obtained by running the Naive Bayes Model for the customer who is accepting the loan and using credit card plus being an online banking user is 0.10 which is equivalent to the value obtained in E.
+
+
+
+```
+
+
+
+
