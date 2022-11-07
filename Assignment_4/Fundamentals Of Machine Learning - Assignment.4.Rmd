@@ -1,0 +1,164 @@
+---
+title: "Fundamentals Of Machine Learning- Assignment-4"
+author: "Elmy Luka"
+date: "2022-11-06"
+output: pdf_document
+---
+
+```{r}
+data_1 <- read.csv("~/Desktop/Pharmaceuticals.csv")
+```
+
+```{r}
+
+library(factoextra)
+library(ggplot2)
+library(tidyverse)
+library(ISLR)
+library(cluster)
+
+##Task 1
+
+#Use only the numerical variables (1 to 9) to cluster the 21 firms. Justify the
+#various choices made in conducting the cluster analysis, such as weights for 
+#different variables, the specific clustering algorithm(s) used, the number of
+#clusters formed, and so on.
+
+P<- na.omit(data_1)
+summary(P)
+
+row.names(P) <- P[,1]
+P_1 <- P[,3:11]
+head(P_1)
+P_2 <- scale(P_1)
+head(P_2)
+
+fviz_nbclust(P_2, kmeans, method = "wss") + labs(subtitle = "Elbow Method")
+fviz_nbclust(P_2, kmeans, method = "silhouette") + labs(subtitle = "Silhouette Method")
+fviz_nbclust(P_2, kmeans, method = "gap_stat") + labs(subtitle = "Gap Stat Method")
+```
+
+```{r}
+set.seed(64060)
+k_value_5 <- kmeans(P_2, centers = 5, nstart = 25)
+k_value_5$centers
+fviz_cluster(k_value_5, data = P_2)
+
+distance_1 <- dist(P_2, method = "euclidean")
+fviz_dist(distance_1)
+
+fit_1 <- kmeans(P_2, 5)
+aggregate(P_2, by=list(fit_1$cluster), FUN=mean)
+P_3 <- data.frame(P_2, fit_1$cluster)
+P_3
+
+clusplot(P_2, fit_1$cluster, color = TRUE, shade = TRUE,
+         labels = 2, lines = 0)
+
+
+#Task 2
+
+#Interpret the clusters with respect to the 
+#numerical variables used in forming the clusters.
+P_4 <- data.frame(P_2,k_value_5$cluster)
+P_4
+
+#Cluster-1 
+#JNJ,MRK,PFE,GSK belongs to this cluster.
+#They have the highest Market Capitalization and the lowest Beta & Price/earnings ratio.
+
+#Cluster 2 
+#AHM,WPI,AVE belongs to this cluster.
+#They have the highest Estimated revenue growth 
+#and the lowest Price/earnings ratio & Asset Turnover ratio.
+
+#Cluster 3 
+#CHTT,MRX,IVX,ELN belongs to this cluster.
+#They have the highest Beta, Leverage & Asset turnover
+#ratio and the lowest Net profit margin & Price/earnings ratio.
+
+#Cluster 4  
+#AGN,BAY,PHA belongs to this cluster.
+#They have the highest Profit/earnings ratio ad lowest
+#Asset turnover ratio. 
+
+#Cluster 5 
+#ABT,SGP,NVS,AZN,BMY,WYE, LLY belongs to this cluster.
+#They have the highest Net profit margin and lowest is 
+#the Leverage.
+
+
+
+
+
+#Task 3
+
+#Is there a pattern in the clusters with respect 
+#to the numerical variables (10 to 12)? #(those not
+#used in forming the clusters)
+
+pharm <- data_1[12:14] %>% 
+  mutate(Clusters=k_value_5$cluster)
+ggplot(pharm, mapping =
+         aes(factor(Clusters), fill =Median_Recommendation)) +
+  geom_bar(position='dodge')+labs(x ='Clusters')
+ggplot(pharm, mapping = 
+     aes(factor(Clusters),fill = Location))+geom_bar(position = 'dodge')+labs(x ='Clusters')
+ggplot(pharm, mapping = 
+         aes(factor(Clusters),fill = Exchange))+
+  geom_bar(position = 'dodge')+labs(x ='Clusters')
+
+#From the plotted graphs, a pattern has been 
+#observed among the clusters. The following statements 
+#are based on these observations:
+
+#Cluster 1 
+
+#The companies are uniformly distributed throughout 
+#AMEX, NASDAQ, and NYSE while the Hold and Moderate 
+#Buy medians in cluster 1 are different from those in the
+#US and Germany, respectively.
+
+#Cluster 2
+#This cluster is exclusively listed on the NYSE with 
+#an equal split between the US and Canada and it also has 
+#equal hold and moderate buy medians.
+
+#Cluster 3
+#Here the cluster has medians for moderate buys and sales 
+#that are equal, and the counts from those of France and Ireland 
+#are same while for the US it is different, and NYSE listing 
+#entirely covers this cluster. 
+
+#Cluster 4 
+#The Hold median in Cluster 4 is the highest, followed by 
+#Moderate Sell and then having Moderate Buy and Strong buy on
+#the same level. They're from countries US, UK and Switzerland 
+#and they are listed in NYSE. 
+
+#Cluster 5
+#This Cluster has the same hold and moderate buy medians
+#and is distributed among the countries US and UK and also 
+#NYSE is listed here.
+
+
+
+
+
+#Task 4
+
+#Provide an appropriate name for each cluster using 
+#any or all of the variables in the dataset.
+
+#Cluster 1- Highest Market Capitalization Cluster.
+#Cluster 2- Highest Estimated Growth Cluster.
+#Cluster 3- Highest Beta Cluster
+#Cluster 4- Highest Profit/earnings ratio Cluster.
+#Cluster 5- Highest Net profit margin Cluster.
+
+
+
+
+
+
+```
