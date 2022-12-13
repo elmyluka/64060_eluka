@@ -1,0 +1,109 @@
+---
+title: "FINAL PROJECT"
+author: "Elmy Luka"
+date: "2022-12-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+
+library(tidyverse)
+library(ggplot2)
+library(factoextra)
+library(ISLR)
+library(gridExtra)
+library(cluster)
+library(dplyr)
+library(caret)
+
+
+```
+
+```{r}
+Fuel_Data <- read.csv("/Users/ELMYLUKA/Desktop/MS BA/Fundamentals Of Machine Learning/Final_Project/Fuel_Data.csv")
+```
+
+```{r}
+#choosing the 4 numerical variables from the dataset and removing the null values.
+data_1<-Fuel_Data[,c(10,15,16,20)]
+
+#Checking NA
+colMeans(is.na(data_1))
+
+#Removing missing values using imputation  for fuel_cost_per_mmbtu 
+data_1$fuel_cost_per_mmbtu [is.na(data_1$fuel_cost_per_mmbtu )]<-
+  median(data_1$fuel_cost_per_mmbtu , na.rm = T)
+
+nrow(data_1)
+```
+```{r}
+#DATA PARTITION
+#2% of the entire data set is considered and out of which the data has been split to  9000 train sets and 3000 test sets.
+
+set.seed(1111)
+#Trainset
+data_1_partition <- createDataPartition(data_1$fuel_cost_per_mmbtu ,p=.015, list = FALSE)
+Train <- data_1[data_1_partition,]
+Exc_Data <- data_1[-data_1_partition,]
+
+#Testset
+data_2_partition <- createDataPartition(Exc_Data$fuel_cost_per_mmbtu,p=0.005,list=F)
+Test <- Exc_Data[data_2_partition,]
+Exc.Data.1 <- Exc_Data[-data_2_partition,]
+```
+
+```{r}
+#Data Normalization
+#(min-max normalization)
+
+norm_data <- preProcess(Train[,-1], 
+                method=c("center","scale"))
+train_norm <-predict(norm_data,Train)
+test_norm <-predict(norm_data,Test)
+
+nrow(train_norm)
+nrow(test_norm)
+```
+
+#kmeans clustering using the silhouette method.
+
+```{r}
+fviz_nbclust(train_norm[,-1],kmeans,method="silhouette")
+```
+
+##kmeans clustering using the wss method.
+```{r}
+fviz_nbclust(train_norm[,-1],kmeans,method="wss")
+```
+
+```{r}
+#Plotting
+
+set.seed(2222)
+kmeans.df <- kmeans(train_norm[,-1], centers = 3, nstart = 25)
+cluster <- kmeans.df$cluster
+
+kmeans.df.1 <- cbind(Train,cluster)
+
+plot.cluster <- fviz_cluster(kmeans.df,kmeans.df.1[,-1])
+plot.cluster
+```
+
+
+```{r}
+#Using Group by to identify and summarize the clusters where a certain amount of each of the variables lie i.e fuel_received_units, fuel_cost_per_mmbtu and fuel_mmbtu_per_unit
+kmeans.df.1%>%group_by(cluster)%>%
+  summarize(median_units=median(fuel_received_units),
+            median_cost=median(fuel_cost_per_mmbtu),
+            median_mmbtu=median(fuel_mmbtu_per_unit))
+
+#identifying the natural resources that each of the clusters contain. 
+kmeans.df.1 %>% select(fuel_type_code_pudl,cluster) %>% group_by(cluster,fuel_type_code_pudl) %>% count() 
+```
+
+
